@@ -60,7 +60,7 @@ variantMatch
   ⇒ VariantCodec rl ri ro
   ⇒ Record ri
   → CJ.Codec (Variant ro)
-variantMatch = variantCodec (Proxy ∷ Proxy rl)
+variantMatch = variantCodec @rl
 
 -- | Builds codecs for variants in combination with `variantCase`.
 -- |
@@ -73,8 +73,8 @@ variantMatch = variantCodec (Proxy ∷ Proxy rl)
 -- | codecMaybe codecA =
 -- |   dimap toVariant fromVariant
 -- |     (CJV.variant
--- |       # CJV.variantCase _Just (Right codecA)
--- |       # CJV.variantCase _Nothing (Left unit))
+-- |       # CJV.variantCase @"just" (Right codecA)
+-- |       # CJV.variantCase @"nothing" (Left unit))
 -- |   where
 -- |   toVariant = case _ of
 -- |     Just a → V.inj _Just a
@@ -89,15 +89,15 @@ variant ∷ CJ.Codec (Variant ())
 variant = Codec (\_ → except (Left (Error.basic "Unexpected value"))) case_
 
 variantCase
-  ∷ ∀ l a r r'
+  ∷ ∀ @l a r r'
   . IsSymbol l
   ⇒ R.Cons l a r r'
-  ⇒ Proxy l
-  → Either a (CJ.Codec a)
+  ⇒ Either a (CJ.Codec a)
   → CJ.Codec (Variant r)
   → CJ.Codec (Variant r')
-variantCase proxy eacodec (Codec dec enc) = Codec.Codec dec' enc'
+variantCase eacodec (Codec dec enc) = Codec.Codec dec' enc'
   where
+  proxy = Proxy @l
 
   dec' ∷ JSON → Except CJ.DecodeError (Variant r')
   dec' j = do
@@ -132,12 +132,12 @@ variantCase proxy eacodec (Codec dec enc) = Codec.Codec dec' enc'
 -- | The class used to enable the building of `Variant` codecs from a record of
 -- | codecs.
 class VariantCodec (rl ∷ RL.RowList Type) (ri ∷ Row Type) (ro ∷ Row Type) | rl → ri ro where
-  variantCodec ∷ ∀ proxy. proxy rl → Record ri → CJ.Codec (Variant ro)
+  variantCodec ∷ Record ri → CJ.Codec (Variant ro)
 
-instance variantCodecNil ∷ VariantCodec RL.Nil () () where
-  variantCodec _ _ = variant
+instance VariantCodec RL.Nil () () where
+  variantCodec _ = variant
 
-instance variantCodecCons ∷
+instance
   ( VariantCodec rs ri' ro'
   , R.Cons sym (Either a (CJ.Codec a)) ri' ri
   , R.Cons sym a ro' ro
@@ -145,11 +145,11 @@ instance variantCodecCons ∷
   , TE.TypeEquals co (Either a (CJ.Codec a))
   ) ⇒
   VariantCodec (RL.Cons sym co rs) ri ro where
-  variantCodec _ codecs =
-    variantCase (Proxy ∷ Proxy sym) codec tail
+  variantCodec codecs =
+    variantCase @sym codec tail
     where
     codec ∷ Either a (CJ.Codec a)
-    codec = TE.from (Record.get (Proxy ∷ Proxy sym) codecs)
+    codec = TE.from (Record.get (Proxy @sym) codecs)
 
     tail ∷ CJ.Codec (Variant ro')
-    tail = variantCodec (Proxy ∷ Proxy rs) ((unsafeCoerce ∷ Record ri → Record ri') codecs)
+    tail = variantCodec @rs ((unsafeCoerce ∷ Record ri → Record ri') codecs)

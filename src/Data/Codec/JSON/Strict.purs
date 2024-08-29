@@ -10,11 +10,11 @@ module Data.Codec.JSON.Strict
 
 import Prelude hiding ((<<<), (<=<), (>=>), (>>>))
 
-import Data.Codec.JSON as CJ
 import Codec.JSON.DecodeError as Error
 import Control.Monad.Except (Except, lift, throwError, withExceptT)
 import Control.Monad.State (StateT, modify_, runStateT)
 import Data.Codec (Codec(..), codec, codec', decode, encode) as Codec
+import Data.Codec.JSON as CJ
 import Data.List ((:))
 import Data.List as L
 import Data.Maybe (Maybe(..))
@@ -27,7 +27,7 @@ import JSON.Object as JO
 import JSON.Path as JP
 import Prim.Row as Row
 import Record.Unsafe as Record
-import Type.Proxy (Proxy)
+import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | The set of properties that have been claimed "so far" during parsing of a
@@ -90,15 +90,14 @@ prop key codec =
 -- | `{ "name": "Karl", "age": 25 }` we would define a codec like this:
 -- | ```
 -- | import Data.Codec.JSON as CJ
--- | import Type.Proxy (Proxy(..))
 -- |
 -- | type Person = { name ∷ String, age ∷ Int }
 -- |
 -- | codecPerson ∷ CJ.Codec Person
 -- | codecPerson =
 -- |   CJ.object $ CJ.record
--- |     # CJ.recordProp (Proxy :: _ "name") CJ.string
--- |     # CJ.recordProp (Proxy :: _ "age") CJ.int
+-- |     # CJ.recordProp @"name" CJ.string
+-- |     # CJ.recordProp @"age" CJ.int
 -- | ```
 -- |
 -- | See also `Data.Codec.JSON.Record.object` for a more commonly useful
@@ -109,16 +108,15 @@ record = Codec.Codec (const (pure {})) pure
 -- | Used with `record` to define codecs for record types that encode into JSON
 -- | objects of the same shape. See the comment on `record` for an example.
 recordProp
-  ∷ ∀ p a r r'
+  ∷ ∀ @p a r r'
   . IsSymbol p
   ⇒ Row.Cons p a r r'
-  ⇒ Proxy p
-  → CJ.Codec a
+  ⇒ CJ.Codec a
   → PropCodec (Record r)
   → PropCodec (Record r')
-recordProp p codecA codecR = Codec.codec dec enc
+recordProp codecA codecR = Codec.codec dec enc
   where
-  key = reflectSymbol p
+  key = reflectSymbol (Proxy @p)
   liftError = Error.withPath (JP.AtKey key)
 
   dec ∷ JObject -> StateT _ (Except Error.DecodeError) (Record r')
@@ -143,16 +141,15 @@ recordProp p codecA codecR = Codec.codec dec enc
 -- |
 -- | The property will be omitted when encoding and the value is `Nothing`.
 recordPropOptional
-  ∷ ∀ p a r r'
+  ∷ ∀ @p a r r'
   . IsSymbol p
   ⇒ Row.Cons p (Maybe a) r r'
-  ⇒ Proxy p
-  → CJ.Codec a
+  ⇒ CJ.Codec a
   → PropCodec (Record r)
   → PropCodec (Record r')
-recordPropOptional p codecA codecR = Codec.codec dec enc
+recordPropOptional codecA codecR = Codec.codec dec enc
   where
-  key = reflectSymbol p
+  key = reflectSymbol (Proxy @p)
   liftError = Error.withPath (JP.AtKey key)
 
   dec ∷ JObject -> StateT _ (Except Error.DecodeError) (Record r')

@@ -23,7 +23,6 @@ import JSON.Object as JO
 import Test.QuickCheck (Result(..), quickCheck)
 import Test.QuickCheck.Gen (Gen)
 import Test.Util (genInt, propCodec, propCodec', propCodec'')
-import Type.Proxy (Proxy(..))
 
 main ∷ Effect Unit
 main = do
@@ -119,9 +118,9 @@ codecObject =
 codecRecord ∷ CJ.Codec TestRecord
 codecRecord =
   CJ.object $ CJ.record
-    # CJ.recordProp (Proxy ∷ Proxy "tag") CJ.string
-    # CJ.recordProp (Proxy ∷ Proxy "x") CJ.int
-    # CJ.recordProp (Proxy ∷ Proxy "y") CJ.boolean
+    # CJ.recordProp @"tag" CJ.string
+    # CJ.recordProp @"x" CJ.int
+    # CJ.recordProp @"y" CJ.boolean
 
 propTestRecord ∷ CJ.Codec TestRecord → Gen Result
 propTestRecord = propCodec' checkEq print genRecord
@@ -141,8 +140,8 @@ genRecordOptional =
 codecRecordOptional ∷ CJ.Codec TestRecordOptional
 codecRecordOptional =
   CJ.object $ CJ.record
-    # CJ.recordProp (Proxy ∷ Proxy "tag") CJ.string
-    # CJ.recordPropOptional (Proxy ∷ Proxy "x") CJ.int
+    # CJ.recordProp @"tag" CJ.string
+    # CJ.recordPropOptional @"x" CJ.int
 
 propTestRecordOptional ∷ Gen Result
 propTestRecordOptional = propCodec' checkEq print genRecordOptional codecRecordOptional

@@ -95,10 +95,10 @@ instance
   ) ⇒
   RowListCodec (RL.Cons sym (Optional a) rs) ri ro where
   rowListCodec codecs =
-    CJ.recordPropOptional (Proxy ∷ Proxy sym) codec tail
+    CJ.recordPropOptional @sym codec tail
     where
     codec ∷ CJ.Codec a
-    codec = coerce (Rec.get (Proxy ∷ Proxy sym) codecs ∷ Optional a)
+    codec = coerce (Rec.get (Proxy @sym) codecs ∷ Optional a)
 
     tail ∷ CJ.PropCodec (Record ro')
     tail = rowListCodec @rs ((unsafeCoerce ∷ Record ri → Record ri') codecs)
@@ -111,10 +111,10 @@ else instance
   ) ⇒
   RowListCodec (RL.Cons sym (CJ.Codec a) rs) ri ro where
   rowListCodec codecs =
-    CJ.recordProp (Proxy ∷ Proxy sym) codec tail
+    CJ.recordProp @sym codec tail
     where
     codec ∷ CJ.Codec a
-    codec = Rec.get (Proxy ∷ Proxy sym) codecs
+    codec = Rec.get (Proxy @sym) codecs
 
     tail ∷ CJ.PropCodec (Record ro')
     tail = rowListCodec @rs ((unsafeCoerce ∷ Record ri → Record ri') codecs)
@@ -136,10 +136,10 @@ instance
   ) ⇒
   RowListCodecStrict (RL.Cons sym (Optional a) rs) ri ro where
   rowListCodecStrict codecs =
-    CJS.recordPropOptional (Proxy ∷ Proxy sym) codec tail
+    CJS.recordPropOptional @sym codec tail
     where
     codec ∷ CJ.Codec a
-    codec = coerce (Rec.get (Proxy ∷ Proxy sym) codecs ∷ Optional a)
+    codec = coerce (Rec.get (Proxy @sym) codecs ∷ Optional a)
 
     tail ∷ CJS.PropCodec (Record ro')
     tail = rowListCodecStrict @rs ((unsafeCoerce ∷ Record ri → Record ri') codecs)
@@ -152,10 +152,10 @@ else instance
   ) ⇒
   RowListCodecStrict (RL.Cons sym (CJ.Codec a) rs) ri ro where
   rowListCodecStrict codecs =
-    CJS.recordProp (Proxy ∷ Proxy sym) codec tail
+    CJS.recordProp @sym codec tail
     where
     codec ∷ CJ.Codec a
-    codec = Rec.get (Proxy ∷ Proxy sym) codecs
+    codec = Rec.get (Proxy @sym) codecs
 
     tail ∷ CJS.PropCodec (Record ro')
     tail = rowListCodecStrict @rs ((unsafeCoerce ∷ Record ri → Record ri') codecs)
